@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GYAR — Sistema de Distribución Inteligente | Opplus</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root{--teal:#1a5c5a;--teal-light:#2a7d7a;--gold:#e8b84b;--gold-light:#f5d48a;--dark:#0d1f1e;--gray:#6b8280;--white:#ffffff;--red:#c0392b;--red-light:#fdecea;--orange:#e67e22;--orange-light:#fef3e8;--green:#27ae60;--green-light:#eafaf1;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--dark);color:var(--white);min-height:100vh;overflow-x:hidden;}
+  nav{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:rgba(13,31,30,0.95);border-bottom:1px solid rgba(255,255,255,0.07);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
+  .nav-brand{display:flex;align-items:center;gap:12px;}
+  .nav-logo{width:36px;height:36px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--gold);}
+  .nav-title{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;}
+  .nav-sub{font-size:11px;color:var(--gray);margin-top:1px;}
+  .nav-tabs{display:flex;gap:4px;}
+  .tab{padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;transition:all .2s;border:none;background:transparent;color:var(--gray);}
+  .tab.active{background:var(--teal);color:var(--white);}
+  .tab:hover:not(.active){background:rgba(255,255,255,0.06);color:var(--white);}
+  .nav-status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--gray);}
+  .pulse{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+  .panel{display:none;padding:28px 32px;animation:fadeIn .3s ease;}
+  .panel.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  h2{font-family:'Syne',sans-serif;font-weight:700;font-size:22px;margin-bottom:6px;}
+  h3{font-family:'Syne',sans-serif;font-weight:600;font-size:15px;margin-bottom:12px;color:var(--gold);}
+  .section-desc{font-size:13px;color:var(--gray);margin-bottom:24px;}
+  .card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:20px;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  .grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
+  .kpi{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;}
+  .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kpi-color,var(--teal));}
+  .kpi-label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+  .kpi-value{font-family:'Syne',sans-serif;font-weight:800;font-size:28px;}
+  .kpi-sub{font-size:12px;color:var(--gray);margin-top:4px;}
+  .kpi-trend{font-size:11px;margin-top:6px;}
+  .kpi-trend.up{color:var(--green);}.kpi-trend.down{color:var(--red);}.kpi-trend.warn{color:var(--gold);}
+  .alert{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:10px;margin-bottom:10px;border-left:4px solid;}
+  .alert.red{background:var(--red-light);border-color:var(--red);color:#7b1e1e;}
+  .alert.orange{background:var(--orange-light);border-color:var(--orange);color:#7a3d00;}
+  .alert.green{background:var(--green-light);border-color:var(--green);color:#1a5c2e;}
+  .alert-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+  .alert-text strong{font-weight:600;font-size:13px;display:block;}
+  .alert-text span{font-size:12px;opacity:.8;}
+  .progress-wrap{margin-bottom:14px;}
+  .progress-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;}
+  .progress-label span:first-child{color:var(--gray);}
+  .progress-label span:last-child{font-weight:600;}
+  .progress-track{height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;}
+  .progress-fill{height:100%;border-radius:4px;transition:width .8s ease;background:var(--fill-color,var(--teal));}
+  .tbl{width:100%;border-collapse:collapse;font-size:13px;}
+  .tbl th{text-align:left;padding:10px 12px;background:rgba(255,255,255,0.05);color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.05em;font-weight:500;}
+  .tbl td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,0.05);}
+  .tbl tr:last-child td{border-bottom:none;}
+  .tbl tr:hover td{background:rgba(255,255,255,0.03);}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+  .badge.rojo{background:#fdecea;color:#c0392b;}.badge.naranja{background:#fef3e8;color:#e67e22;}.badge.verde{background:#eafaf1;color:#27ae60;}.badge.azul{background:#e8f4f3;color:#1a5c5a;}
+  .score-bar{display:flex;align-items:center;gap:8px;}
+  .score-fill{height:6px;border-radius:3px;background:var(--teal);}
+  .score-num{font-weight:700;font-size:13px;color:var(--gold);min-width:28px;}
+  .param-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .param-item{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:14px 16px;}
+  .param-item label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:8px;}
+  .param-item input[type=range]{width:100%;accent-color:var(--gold);cursor:pointer;}
+  .param-value-row{display:flex;justify-content:space-between;align-items:center;margin-top:6px;}
+  .param-val{font-family:'Syne',sans-serif;font-weight:700;font-size:20px;color:var(--gold);}
+  .param-desc{font-size:11px;color:var(--gray);}
+  .tramo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+  .tramo-card{border-radius:10px;padding:16px;text-align:center;border:2px solid transparent;transition:all .2s;}
+  .tramo-card:nth-child(1){background:rgba(39,174,96,0.12);border-color:rgba(39,174,96,0.3);}
+  .tramo-card:nth-child(2){background:rgba(230,126,34,0.12);border-color:rgba(230,126,34,0.3);}
+  .tramo-card:nth-child(3){background:rgba(192,57,43,0.12);border-color:rgba(192,57,43,0.3);}
+  .tramo-card .t-num{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;}
+  .tramo-card:nth-child(1) .t-num{color:#27ae60;}.tramo-card:nth-child(2) .t-num{color:#e67e22;}.tramo-card:nth-child(3) .t-num{color:#c0392b;}
+  .tramo-card .t-label{font-size:12px;color:var(--gray);margin-top:2px;}
+  .tramo-card input[type=range]{width:100%;accent-color:currentColor;margin-top:8px;}
+  .formula-box{background:var(--dark);border:1px solid var(--teal);border-radius:10px;padding:16px 20px;font-size:14px;color:var(--gold);margin:14px 0;line-height:1.7;}
+  .gestor-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+  .gestor-name{font-size:12px;color:var(--gray);width:72px;flex-shrink:0;}
+  .gestor-bar-wrap{flex:1;height:20px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;}
+  .gestor-bar{height:100%;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;}
+  .gestor-bar span{font-size:10px;font-weight:600;color:rgba(0,0,0,0.7);}
+  .gestor-cap{font-size:11px;color:var(--gray);width:40px;text-align:right;}
+  .flow{display:flex;align-items:center;gap:0;margin:20px 0;overflow-x:auto;padding-bottom:8px;}
+  .flow-step{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px 18px;text-align:center;min-width:130px;flex-shrink:0;}
+  .flow-step .f-icon{font-size:24px;margin-bottom:6px;}
+  .flow-step .f-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--gold);}
+  .flow-step .f-desc{font-size:10px;color:var(--gray);margin-top:3px;line-height:1.4;}
+  .flow-arrow{color:var(--teal-light);font-size:22px;padding:0 6px;flex-shrink:0;}
+  .flow-step.highlight{background:rgba(26,92,90,0.4);border-color:var(--teal-light);}
+  .btn-primary{background:var(--gold);color:var(--dark);border:none;border-radius:8px;padding:12px 28px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;}
+  .btn-primary:hover{background:var(--gold-light);transform:translateY(-1px);}
+  .btn-sec{background:transparent;color:var(--gray);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 20px;font-size:13px;cursor:pointer;transition:all .2s;}
+  .btn-sec:hover{border-color:var(--teal-light);color:var(--white);}
+  .btn-auto{background:linear-gradient(135deg,var(--teal),var(--teal-light));color:var(--white);border:none;border-radius:8px;padding:9px 18px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:7px;}
+  .btn-auto:hover{opacity:.9;transform:translateY(-1px);}
+  .mini-bars{display:flex;align-items:flex-end;gap:6px;height:60px;}
+  .mini-bar{flex:1;border-radius:3px 3px 0 0;transition:height .5s ease;}
+  .mini-bar:hover{opacity:.8;}
+  .mini-labels{display:flex;gap:6px;margin-top:4px;}
+  .mini-labels span{flex:1;font-size:9px;color:var(--gray);text-align:center;}
+
+  /* WEIGHT ITEMS — clickeables */
+  .weight-item{display:flex;align-items:center;gap:12px;padding:11px 8px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;border-radius:8px;transition:background .15s;}
+  .weight-item:last-child{border-bottom:none;}
+  .weight-item:hover{background:rgba(255,255,255,0.05);}
+  .w-icon{font-size:20px;width:32px;text-align:center;flex-shrink:0;}
+  .w-info{flex:1;}
+  .w-name{font-size:13px;font-weight:500;}
+  .w-desc{font-size:11px;color:var(--gray);margin-top:2px;}
+  .w-hint{font-size:10px;color:var(--teal-light);margin-top:3px;}
+  .w-pct{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--gold);min-width:44px;text-align:right;}
+
+  .dash-header{background:linear-gradient(135deg,var(--teal) 0%,var(--teal-light) 100%);border-radius:16px;padding:24px 28px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;position:relative;overflow:hidden;}
+  .dash-header::after{content:'';position:absolute;right:-20px;top:-20px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.06);}
+  .dash-header h2{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px;}
+  .dash-header p{font-size:13px;opacity:.8;}
+  .dash-header-right{text-align:right;font-size:12px;opacity:.8;}
+  .mvp-phase{display:flex;gap:16px;align-items:flex-start;margin-bottom:20px;}
+  .mvp-num{width:36px;height:36px;border-radius:50%;background:var(--teal);color:var(--white);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;flex-shrink:0;margin-top:2px;}
+  .mvp-content h4{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--gold);}
+  .mvp-content p{font-size:12px;color:var(--gray);margin-top:4px;line-height:1.5;}
+  .mvp-tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+  .mvp-tag{padding:3px 10px;background:rgba(232,184,75,0.12);color:var(--gold);border-radius:20px;font-size:11px;font-weight:500;}
+
+  /* ── MODALES ── */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .25s;}
+  .modal-overlay.open{opacity:1;pointer-events:all;}
+  .modal-box{background:#0f2423;border:1px solid rgba(42,125,122,0.6);border-radius:18px;padding:30px;width:92%;max-width:530px;max-height:82vh;overflow-y:auto;transform:translateY(24px);transition:transform .25s;}
+  .modal-overlay.open .modal-box{transform:translateY(0);}
+  .modal-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;}
+  .modal-close{background:rgba(255,255,255,0.08);border:none;color:var(--gray);border-radius:6px;padding:6px 12px;cursor:pointer;font-size:16px;transition:all .2s;flex-shrink:0;}
+  .modal-close:hover{background:rgba(255,255,255,0.15);color:var(--white);}
+  .modal-icon{font-size:34px;margin-bottom:4px;}
+  .modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:19px;}
+  .modal-pct{font-family:'Syne',sans-serif;font-weight:800;font-size:34px;color:var(--gold);line-height:1;}
+  .msec-title{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--teal-light);font-weight:600;margin-bottom:5px;margin-top:14px;}
+  .msec-body{font-size:13px;color:var(--gray);line-height:1.7;}
+  .mformula{background:rgba(0,0,0,0.35);border:1px solid rgba(232,184,75,0.25);border-radius:8px;padding:11px 14px;font-size:12px;color:var(--gold);margin-top:6px;white-space:pre-wrap;}
+  .mexamples{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;}
+  .mex{flex:1;min-width:140px;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;}
+  .mex .el{font-size:11px;color:var(--gray);margin-bottom:3px;}
+  .mex .ev{font-size:12px;font-weight:600;}
+
+  /* AUTO PESOS MODAL */
+  .wslider-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .wslider-label{font-size:12px;color:var(--gray);width:160px;flex-shrink:0;}
+  .wslider-row input[type=range]{flex:1;accent-color:var(--gold);}
+  .wslider-val{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:var(--gold);width:38px;text-align:right;}
+  .wsum-bar{padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;margin-bottom:14px;transition:all .3s;}
+
+  ::-webkit-scrollbar{width:6px;height:6px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:3px;}
+  @media(max-width:900px){.grid-5{grid-template-columns:1fr 1fr;}.grid-3{grid-template-columns:1fr 1fr;}.panel{padding:20px 16px;}nav{flex-wrap:wrap;gap:10px;}}
+  @media(max-width:620px){.grid-2,.grid-3,.grid-5,.param-grid,.tramo-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- ═══ MODAL: DETALLE VARIABLE IPP ═══ -->
+<div class="modal-overlay" id="varModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div>
+        <div class="modal-icon" id="m-icon">⏱️</div>
+        <div class="modal-title" id="m-title">Variable</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+        <button class="modal-close" onclick="document.getElementById('varModal').classList.remove('open')">✕</button>
+        <div class="modal-pct" id="m-pct">30%</div>
+        <div style="font-size:10px;color:var(--gray);">peso actual</div>
+      </div>
+    </div>
+    <div class="msec-title">¿Qué mide?</div><div class="msec-body" id="m-what"></div>
+    <div class="msec-title">¿Por qué tiene este peso?</div><div class="msec-body" id="m-why"></div>
+    <div class="msec-title">Fórmula de cálculo</div><div class="mformula" id="m-formula"></div>
+    <div class="msec-title">Ejemplos prácticos</div><div class="mexamples" id="m-examples"></div>
+    <div class="msec-title">Impacto en el IPP</div><div class="msec-body" id="m-impact"></div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: AJUSTE PESOS IPP ═══ -->
+<div class="modal-overlay" id="autoModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box" style="max-width:560px;">
+    <div class="modal-top">
+      <div>
+        <div style="font-size:26px;">⚙️</div>
+        <div class="modal-title">Ajuste de Pesos IPP</div>
+        <div style="font-size:12px;color:var(--gray);margin-top:3px;">Los pesos deben sumar exactamente 100%</div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('autoModal').classList.remove('open')">✕</button>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="btn-sec" style="font-size:12px;padding:6px 13px;" onclick="applyPreset('balanced')">⚖️ Equilibrado</button>
+      <button class="btn-sec" style="font-size:12px;padding:6px 13px;" onclick="applyPreset('urgency')">🚨 Máx. Urgencia</button>
+      <button class="btn-sec" style="font-size:12px;padding:6px 13px;" onclick="applyPreset('economic')">💰 Máx. Económico</button>
+      <button class="btn-sec" style="font-size:12px;padding:6px 13px;" onclick="applyPreset('recovery')">🎯 Máx. Recuperación</button>
+    </div>
+
+    <div class="wsum-bar" id="wsum-bar">Suma: 100% ✓</div>
+
+    <div class="wslider-row"><div class="wslider-label">⏱️ Cercanía umbral</div><input type="range" id="w-urg" min="5" max="60" step="5" value="30" oninput="weightsUpdate()"><div class="wslider-val" id="wv-urg">30%</div></div>
+    <div class="wslider-row"><div class="wslider-label">💰 Importe deuda</div><input type="range" id="w-imp" min="5" max="60" step="5" value="25" oninput="weightsUpdate()"><div class="wslider-val" id="wv-imp">25%</div></div>
+    <div class="wslider-row"><div class="wslider-label">🎯 P. Recuperación</div><input type="range" id="w-rec" min="5" max="60" step="5" value="20" oninput="weightsUpdate()"><div class="wslider-val" id="wv-rec">20%</div></div>
+    <div class="wslider-row"><div class="wslider-label">🔧 Esfuerzo estimado</div><input type="range" id="w-esf" min="5" max="50" step="5" value="15" oninput="weightsUpdate()"><div class="wslider-val" id="wv-esf">15%</div></div>
+    <div class="wslider-row"><div class="wslider-label">📜 Historial gestión</div><input type="range" id="w-his" min="5" max="40" step="5" value="10" oninput="weightsUpdate()"><div class="wslider-val" id="wv-his">10%</div></div>
+
+    <div style="display:flex;gap:10px;margin-top:18px;">
+      <button class="btn-primary" style="flex:1;" onclick="applyWeights()">✓ Aplicar al modelo</button>
+      <button class="btn-sec" onclick="applyPreset('balanced')">↺ Restablecer</button>
+    </div>
+    <div style="font-size:11px;color:var(--gray);margin-top:10px;text-align:center;">Los nuevos pesos actualizan la fórmula visible, los porcentajes del modelo y la tabla de expedientes en tiempo real.</div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">GY</div>
+    <div>
+      <div class="nav-title">GYAR — Distribución Inteligente</div>
+      <div class="nav-sub">Sistema operativo v2.0 · Opplus</div>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <button class="tab active" onclick="showPanel('dashboard',this)">📊 Dashboard</button>
+    <button class="tab" onclick="showPanel('modelo',this)">⚙️ Modelo</button>
+    <button class="tab" onclick="showPanel('simulador',this)">🎛️ Simulador</button>
+    <button class="tab" onclick="showPanel('expedientes',this)">📋 Expedientes</button>
+    <button class="tab" onclick="showPanel('mvp',this)">🚀 MVP</button>
+  </div>
+  <div class="nav-status"><div class="pulse"></div><span id="clock">—</span></div>
+</nav>
+
+<!-- ═══ PANEL 1 — DASHBOARD ═══ -->
+<div class="panel active" id="p-dashboard">
+  <div class="dash-header">
+    <div><h2>🎯 Panel de Control Operativo · GYAR</h2><p>Gestión de Recobros de Inversión Irregular — Visión en tiempo real</p></div>
+    <div class="dash-header-right"><div style="font-size:22px;font-weight:800;font-family:'Syne',sans-serif;" id="d-fecha">—</div><div>Actualización automática</div></div>
+  </div>
+  <div class="grid-5" style="margin-bottom:20px;">
+    <div class="kpi" style="--kpi-color:#27ae60"><div class="kpi-label">Expedientes Entrada</div><div class="kpi-value" id="kpi-entrada">12.000</div><div class="kpi-sub">hoy · vía TRANSMI</div><div class="kpi-trend warn">≈ capacidad límite</div></div>
+    <div class="kpi" style="--kpi-color:#e8b84b"><div class="kpi-label">Capacidad Total</div><div class="kpi-value" id="kpi-cap">11.700</div><div class="kpi-sub" id="kpi-cap-sub">39 gest. × 300</div><div class="kpi-trend warn" id="kpi-cap-trend">97,5% uso</div></div>
+    <div class="kpi" style="--kpi-color:#c0392b"><div class="kpi-label">Pendientes críticos</div><div class="kpi-value" id="kpi-criticos">—</div><div class="kpi-sub">tramo 61-90 días</div><div class="kpi-trend down" id="kpi-crit-sub">—</div></div>
+    <div class="kpi" style="--kpi-color:#1a5c5a"><div class="kpi-label">Tasa Recuperación</div><div class="kpi-value" id="kpi-tasa">20%</div><div class="kpi-sub">estimada global</div><div class="kpi-trend up" id="kpi-tasa-sub">—</div></div>
+    <div class="kpi" style="--kpi-color:#e67e22"><div class="kpi-label">Valor en riesgo/día</div><div class="kpi-value" id="kpi-riesgo">—</div><div class="kpi-sub">importe no gestionado</div><div class="kpi-trend down">expedientes sin cubrir</div></div>
+  </div>
+  <div class="grid-3" style="margin-bottom:20px;">
+    <div class="card">
+      <h3>📦 Distribución por Tramos</h3>
+      <div class="progress-wrap"><div class="progress-label"><span>🟢 Tramo 1-30 días</span><span id="t1-pct">40%</span></div><div class="progress-track"><div class="progress-fill" id="t1-bar" style="--fill-color:#27ae60;width:40%"></div></div><div style="font-size:11px;color:var(--gray);margin-top:3px;" id="t1-cnt">4.800 expedientes</div></div>
+      <div class="progress-wrap"><div class="progress-label"><span>🟠 Tramo 31-60 días</span><span id="t2-pct">35%</span></div><div class="progress-track"><div class="progress-fill" id="t2-bar" style="--fill-color:#e67e22;width:35%"></div></div><div style="font-size:11px;color:var(--gray);margin-top:3px;" id="t2-cnt">4.200 expedientes</div></div>
+      <div class="progress-wrap"><div class="progress-label"><span>🔴 Tramo 61-90 días</span><span id="t3-pct">25%</span></div><div class="progress-track"><div class="progress-fill" id="t3-bar" style="--fill-color:#c0392b;width:25%"></div></div><div style="font-size:11px;color:var(--gray);margin-top:3px;" id="t3-cnt">3.000 expedientes</div></div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);font-size:12px;color:var(--gray);">Ajustable en el Simulador → Tramos</div>
+    </div>
+    <div class="card"><h3>👥 Carga por Código de Gestor</h3><div id="gestor-bars-dash"></div></div>
+    <div class="card"><h3>🚨 Alertas Operativas</h3><div id="alertas-container"></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><h3>📈 Evolución semanal (simulada)</h3><div class="mini-bars" id="mini-bars"></div><div class="mini-labels" id="mini-labels"></div><div style="font-size:11px;color:var(--gray);margin-top:12px;">Expedientes gestionados por día — últimos 7 días</div></div>
+    <div class="card">
+      <h3>🎯 KPIs de Control</h3>
+      <div class="progress-wrap" style="margin-top:8px;"><div class="progress-label"><span>% Gestionados antes de 60 días</span><span id="kpi-60">—</span></div><div class="progress-track"><div class="progress-fill" id="bar-60" style="--fill-color:#27ae60;width:0%"></div></div></div>
+      <div class="progress-wrap"><div class="progress-label"><span>Productividad media gestor</span><span id="kpi-prod">—</span></div><div class="progress-track"><div class="progress-fill" id="bar-prod" style="--fill-color:#e8b84b;width:0%"></div></div></div>
+      <div class="progress-wrap"><div class="progress-label"><span>Tasa de reactivaciones</span><span id="kpi-react">—</span></div><div class="progress-track"><div class="progress-fill" id="bar-react" style="--fill-color:#e67e22;width:0%"></div></div></div>
+      <div class="progress-wrap"><div class="progress-label"><span>Cobertura tramo crítico (61-90)</span><span id="kpi-crit2">—</span></div><div class="progress-track"><div class="progress-fill" id="bar-crit" style="--fill-color:#c0392b;width:0%"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PANEL 2 — MODELO ═══ -->
+<div class="panel" id="p-modelo">
+  <h2>⚙️ Modelo de Priorización Inteligente</h2>
+  <p class="section-desc">Índice de Prioridad Ponderada (IPP) — sistema de scoring multivariable. <strong style="color:var(--gold);">Haz clic en cada variable para ver su explicación detallada.</strong></p>
+  <div class="card" style="margin-bottom:20px;">
+    <h3>🔄 Flujo Operativo Rediseñado</h3>
+    <div class="flow">
+      <div class="flow-step"><div class="f-icon">📥</div><div class="f-title">ENTRADA</div><div class="f-desc">TRANSMI recibe ~12.000 exp./día</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step highlight"><div class="f-icon">🧮</div><div class="f-title">SCORING IPP</div><div class="f-desc">Cálculo automático del índice por expediente</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step highlight"><div class="f-icon">📊</div><div class="f-title">SECUENCIACIÓN</div><div class="f-desc">Ordenación por prioridad + tramo</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step highlight"><div class="f-icon">⚖️</div><div class="f-title">ASIGNACIÓN</div><div class="f-desc">Carga ponderada por gestor y tramo</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="f-icon">📞</div><div class="f-title">GESTIÓN</div><div class="f-desc">Gestor actúa con cola ya decidida</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="f-icon">🔁</div><div class="f-title">REACTIVACIÓN</div><div class="f-desc">Re-scoring automático si no resuelto</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="f-icon">📈</div><div class="f-title">FEEDBACK</div><div class="f-desc">Dashboard + ajuste de pesos</div></div>
+    </div>
+    <div style="font-size:12px;color:var(--gray);margin-top:8px;">🟢 Pasos añadidos por el modelo inteligente | Lean: elimina la decisión manual como cuello de botella</div>
+  </div>
+  <div class="grid-2" style="margin-bottom:20px;">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <h3 style="margin:0;">📐 Variables Ponderadas del IPP</h3>
+        <button class="btn-auto" onclick="document.getElementById('autoModal').classList.add('open')">⚙️ Ajustar pesos</button>
+      </div>
+      <div style="font-size:11px;color:var(--teal-light);margin-bottom:10px;">👆 Pulsa cualquier variable para su explicación completa</div>
+      <div>
+        <div class="weight-item" onclick="openVarModal('urgencia')"><div class="w-icon">⏱️</div><div class="w-info"><div class="w-name">Cercanía al umbral (días restantes)</div><div class="w-desc">A menor días hasta 90d → mayor urgencia. Escala inversa.</div><div class="w-hint">▶ Ver explicación detallada</div></div><div class="w-pct" id="disp-urg">30%</div></div>
+        <div class="weight-item" onclick="openVarModal('importe')"><div class="w-icon">💰</div><div class="w-info"><div class="w-name">Importe de la deuda</div><div class="w-desc">Mayor importe → mayor impacto económico recuperable.</div><div class="w-hint">▶ Ver explicación detallada</div></div><div class="w-pct" id="disp-imp">25%</div></div>
+        <div class="weight-item" onclick="openVarModal('recuperacion')"><div class="w-icon">🎯</div><div class="w-info"><div class="w-name">Probabilidad de recuperación</div><div class="w-desc">Historial + perfil del cliente. Foco en casos recuperables.</div><div class="w-hint">▶ Ver explicación detallada</div></div><div class="w-pct" id="disp-rec">20%</div></div>
+        <div class="weight-item" onclick="openVarModal('esfuerzo')"><div class="w-icon">🔧</div><div class="w-info"><div class="w-name">Esfuerzo estimado</div><div class="w-desc">Inverso: casos de bajo esfuerzo suben en cola (quick wins).</div><div class="w-hint">▶ Ver explicación detallada</div></div><div class="w-pct" id="disp-esf">15%</div></div>
+        <div class="weight-item" onclick="openVarModal('historial')"><div class="w-icon">📜</div><div class="w-info"><div class="w-name">Historial de gestión</div><div class="w-desc">Sin gestión previa → prioridad mayor. Con contacto → menor.</div><div class="w-hint">▶ Ver explicación detallada</div></div><div class="w-pct" id="disp-his">10%</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🧮 Fórmula del Índice IPP</h3>
+      <div class="formula-box">
+        <span style="color:var(--gold);font-weight:700;">IPP</span> = <span style="color:#fff;">
+          <span id="fw-u">0.30</span> × <span style="color:#27ae60;">Urgencia</span> +
+          <span id="fw-i">0.25</span> × <span style="color:#e8b84b;">Importe_norm</span> +
+          <span id="fw-r">0.20</span> × <span style="color:#3498db;">P_recuperación</span> +
+          <span id="fw-e">0.15</span> × <span style="color:#9b59b6;">(1–Esfuerzo_norm)</span> +
+          <span id="fw-h">0.10</span> × <span style="color:#e67e22;">Novedad_gestión</span>
+        </span><br><br>→ Resultado: <span style="color:var(--gold);font-weight:700;">IPP ∈ [0, 100]</span>
+      </div>
+      <div style="margin-top:14px;">
+        <div style="font-size:12px;color:var(--gray);margin-bottom:10px;"><strong style="color:var(--white);">Escala de prioridad resultante:</strong></div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:center;gap:10px;"><div style="width:12px;height:12px;background:#c0392b;border-radius:2px;flex-shrink:0;"></div><span style="font-size:12px;"><strong>P1 — Crítico</strong> <span style="color:var(--gray);">IPP ≥ 75 | Atención inmediata</span></span></div>
+          <div style="display:flex;align-items:center;gap:10px;"><div style="width:12px;height:12px;background:#e67e22;border-radius:2px;flex-shrink:0;"></div><span style="font-size:12px;"><strong>P2 — Alto</strong> <span style="color:var(--gray);">IPP 50-74 | Gestión prioritaria</span></span></div>
+          <div style="display:flex;align-items:center;gap:10px;"><div style="width:12px;height:12px;background:#e8b84b;border-radius:2px;flex-shrink:0;"></div><span style="font-size:12px;"><strong>P3 — Medio</strong> <span style="color:var(--gray);">IPP 25-49 | Gestión estándar</span></span></div>
+          <div style="display:flex;align-items:center;gap:10px;"><div style="width:12px;height:12px;background:#27ae60;border-radius:2px;flex-shrink:0;"></div><span style="font-size:12px;"><strong>P4 — Bajo</strong> <span style="color:var(--gray);">IPP &lt; 25 | Seguimiento diferido</span></span></div>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding:12px;background:rgba(232,184,75,0.08);border-radius:8px;font-size:12px;color:var(--gray);line-height:1.6;"><strong style="color:var(--gold);">Lógica Lean:</strong> el IPP reemplaza la decisión manual. Nadie decide qué coger primero — el sistema ya lo ha ordenado. Elimina el cuello de botella de la priorización.</div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>🔁 Reglas de Reactivación</h3>
+    <div class="grid-3">
+      <div style="padding:14px;background:rgba(39,174,96,0.08);border-radius:8px;border-left:3px solid #27ae60;"><div style="font-size:12px;font-weight:600;color:#27ae60;margin-bottom:6px;">¿Cuándo se reactiva?</div><div style="font-size:12px;color:var(--gray);line-height:1.5;">Sin resolución tras contacto. Sin contacto en 48-72h. Cliente solicita devolución de llamada.</div></div>
+      <div style="padding:14px;background:rgba(232,184,75,0.08);border-radius:8px;border-left:3px solid var(--gold);"><div style="font-size:12px;font-weight:600;color:var(--gold);margin-bottom:6px;">¿Con qué prioridad vuelve?</div><div style="font-size:12px;color:var(--gray);line-height:1.5;">IPP original + <strong>+10 puntos</strong> por cada reactivación (máx. 2). Si alcanza P1, pasa a cola urgente dedicada.</div></div>
+      <div style="padding:14px;background:rgba(192,57,43,0.08);border-radius:8px;border-left:3px solid #c0392b;"><div style="font-size:12px;font-weight:600;color:#c0392b;margin-bottom:6px;">¿Cómo se controla?</div><div style="font-size:12px;color:var(--gray);line-height:1.5;">Máx. 15% de la carga diaria puede ser reactivaciones. Si se supera, alerta automática en el dashboard.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PANEL 3 — SIMULADOR ═══ -->
+<div class="panel" id="p-simulador">
+  <h2>🎛️ Simulador de Parámetros Operativos</h2>
+  <p class="section-desc">Modifica los datos base y observa cómo cambian los KPIs y la distribución de carga en tiempo real.</p>
+  <div class="grid-2">
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <h3>📥 Parámetros de Entrada</h3>
+        <div class="param-grid">
+          <div class="param-item"><label>Expedientes diarios</label><input type="range" id="s-exp" min="5000" max="20000" step="500" value="12000" oninput="simUpdate()"><div class="param-value-row"><div class="param-val" id="sv-exp">12.000</div><div class="param-desc">vía TRANSMI</div></div></div>
+          <div class="param-item"><label>Número de gestores</label><input type="range" id="s-gest" min="20" max="60" step="1" value="39" oninput="simUpdate()"><div class="param-value-row"><div class="param-val" id="sv-gest">39</div><div class="param-desc">activos</div></div></div>
+          <div class="param-item"><label>Capacidad por gestor/día</label><input type="range" id="s-cap" min="150" max="500" step="10" value="300" oninput="simUpdate()"><div class="param-value-row"><div class="param-val" id="sv-cap">300</div><div class="param-desc">exp/gestor/día</div></div></div>
+          <div class="param-item"><label>Tasa de recuperación</label><input type="range" id="s-tasa" min="5" max="60" step="1" value="20" oninput="simUpdate()"><div class="param-value-row"><div class="param-val" id="sv-tasa">20%</div><div class="param-desc">estimada</div></div></div>
+          <div class="param-item"><label>Importe medio expediente (€)</label><input type="range" id="s-imp" min="500" max="10000" step="100" value="2500" oninput="simUpdate()"><div class="param-value-row"><div class="param-val" id="sv-imp">2.500€</div><div class="param-desc">deuda media</div></div></div>
+          <div class="param-item"><label>% Reactivaciones diarias</label><input type="range" id="s-react" min="0" max="30" step="1" value="10" oninput="simUpdate()"><div class="param-value-row"><div class="param-val" id="sv-react">10%</div><div class="param-desc">del total</div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>📦 Distribución por Tramos</h3>
+        <p style="font-size:12px;color:var(--gray);margin-bottom:14px;">Ajusta los sliders. Los tres tramos se equilibran automáticamente para sumar 100%.</p>
+        <div class="tramo-grid">
+          <div class="tramo-card"><div class="t-num" id="st1v">40%</div><div class="t-label">🟢 1-30 días</div><input type="range" id="s-t1" min="0" max="100" step="5" value="40" oninput="tramoUpdate(1)"></div>
+          <div class="tramo-card"><div class="t-num" id="st2v">35%</div><div class="t-label">🟠 31-60 días</div><input type="range" id="s-t2" min="0" max="100" step="5" value="35" oninput="tramoUpdate(2)"></div>
+          <div class="tramo-card"><div class="t-num" id="st3v">25%</div><div class="t-label">🔴 61-90 días</div><input type="range" id="s-t3" min="0" max="100" step="5" value="25" oninput="tramoUpdate(3)"></div>
+        </div>
+        <div style="text-align:center;font-size:12px;padding:8px;border-radius:8px;" id="tramo-sum-info"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <h3>📊 Resultados del Simulador</h3>
+        <div class="grid-2" style="gap:12px;margin-bottom:16px;">
+          <div style="padding:14px;background:rgba(255,255,255,0.04);border-radius:8px;text-align:center;"><div style="font-size:11px;color:var(--gray);margin-bottom:4px;">CAPACIDAD TOTAL</div><div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;" id="r-cap">—</div></div>
+          <div style="padding:14px;background:rgba(255,255,255,0.04);border-radius:8px;text-align:center;"><div style="font-size:11px;color:var(--gray);margin-bottom:4px;">% USO CAPACIDAD</div><div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;" id="r-uso">—</div></div>
+          <div style="padding:14px;background:rgba(255,255,255,0.04);border-radius:8px;text-align:center;"><div style="font-size:11px;color:var(--gray);margin-bottom:4px;">EXP. NO CUBIERTOS</div><div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#c0392b;" id="r-gap">—</div></div>
+          <div style="padding:14px;background:rgba(255,255,255,0.04);border-radius:8px;text-align:center;"><div style="font-size:11px;color:var(--gray);margin-bottom:4px;">VALOR RECUPERABLE/DÍA</div><div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--gold);" id="r-val">—</div></div>
+        </div>
+        <div id="r-diagnostico"></div>
+      </div>
+      <div class="card" style="margin-bottom:16px;"><h3>⚖️ Asignación Propuesta por Tramo</h3><div id="asignacion-tramos"></div></div>
+      <div class="card">
+        <h3>🧑‍💼 Carga Sugerida por Código de Gestor</h3>
+        <p style="font-size:12px;color:var(--gray);margin-bottom:12px;">Tramo crítico: menor volumen, mayor complejidad por expediente.</p>
+        <div id="s-gestor-bars"></div>
+        <div style="margin-top:10px;font-size:11px;color:var(--gray);">Verde = bajo su máx. | Amarillo = al límite | Rojo = sobrecarga</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PANEL 4 — EXPEDIENTES ═══ -->
+<div class="panel" id="p-expedientes">
+  <h2>📋 Muestra de Expedientes Priorizados</h2>
+  <p class="section-desc">Cola ordenada por el algoritmo IPP antes de asignarse a gestores. Generada con los parámetros y pesos actuales del simulador.</p>
+  <div class="card" style="margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div><h3 style="margin:0;">🗂️ Cola Priorizada del Día</h3><div style="font-size:12px;color:var(--gray);">Ordenada por IPP descendente · 20 expedientes de muestra</div></div>
+      <div style="display:flex;gap:8px;"><button class="btn-sec" onclick="generateExpedientes()">🔄 Regenerar</button><button class="btn-primary" onclick="generateExpedientes()">⬇ Simular asignación</button></div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="tbl">
+        <thead><tr><th>#</th><th>ID Expediente</th><th>Días impago</th><th>Tramo</th><th>Importe (€)</th><th>P. Recuperación</th><th>Esfuerzo</th><th>Historial</th><th>IPP Score</th><th>Prioridad</th><th>Cód. Gestor</th></tr></thead>
+        <tbody id="exp-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <h3>📘 Cómo interpretar la tabla</h3>
+    <div class="grid-2">
+      <div style="font-size:13px;color:var(--gray);line-height:1.8;"><strong style="color:var(--white);">IPP Score:</strong> 0-100, calculado automáticamente con los pesos actuales. Mayor = más urgente.<br><strong style="color:var(--white);">Cód. Gestor:</strong> código interno anonimizado del agente asignado. Sin datos nominativos.<br><strong style="color:var(--white);">Esfuerzo:</strong> Bajo sube en cola (quick win). Alto no baja, pero tampoco bonifica.</div>
+      <div style="font-size:13px;color:var(--gray);line-height:1.8;"><strong style="color:#c0392b;">P1 Crítico:</strong> gestión hoy antes de mediodía.<br><strong style="color:#e67e22;">P2 Alto:</strong> gestión hoy, segunda tanda.<br><strong style="color:#e8b84b;">P3 Medio:</strong> gestión antes de fin de jornada.<br><strong style="color:#27ae60;">P4 Bajo:</strong> diferible a mañana con re-scoring.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PANEL 5 — MVP ═══ -->
+<div class="panel" id="p-mvp">
+  <h2>🚀 MVP por Fases — Hoja de Ruta</h2>
+  <p class="section-desc">Plan de implantación en 5 fases progresivas con herramientas accesibles, sin desarrollo complejo y con resultado inmediato desde la Fase 1.</p>
+  <div class="grid-2" style="margin-bottom:20px;">
+    <div>
+      <div class="card">
+        <h3>🗓️ Roadmap de Implantación</h3>
+
+        <div class="mvp-phase">
+          <div class="mvp-num">1</div>
+          <div class="mvp-content">
+            <h4>Scoring en Excel con tabla dinámica</h4>
+            <p>La fórmula IPP se implementa en Excel. Cada mañana el supervisor pega el fichero de TRANSMI y Excel ordena automáticamente la cola de gestión por score. Sin código, sin instalación, operativo en horas.</p>
+            <div class="mvp-tags"><span class="mvp-tag">Excel</span><span class="mvp-tag">Semana 1-2</span><span class="mvp-tag">Sin coste</span><span class="mvp-tag">Sin código</span></div>
+          </div>
+        </div>
+
+        <div class="mvp-phase">
+          <div class="mvp-num" style="background:var(--gold);color:var(--dark);">2</div>
+          <div class="mvp-content">
+            <h4>Automatización con macro VBA (un solo clic)</h4>
+            <p>Se añade una macro VBA al propio Excel que importa el fichero TRANSMI, calcula el IPP y genera la cola ordenada con un único clic. No requiere conocimientos técnicos para operarlo: el supervisor solo pulsa "Actualizar". Compatible con cualquier PC de oficina, sin instalar nada externo.</p>
+            <div class="mvp-tags"><span class="mvp-tag">Macro VBA</span><span class="mvp-tag">Mes 1</span><span class="mvp-tag">1 clic al día</span><span class="mvp-tag">Sin instalación</span></div>
+          </div>
+        </div>
+
+        <div class="mvp-phase">
+          <div class="mvp-num" style="background:#e67e22;">3</div>
+          <div class="mvp-content">
+            <h4>Motor de reglas en Google Sheets + Apps Script</h4>
+            <p>La lógica se traslada a Google Sheets compartido. Un script gratuito de Google Apps Script ejecuta el scoring cada mañana a las 7:00h, envía la cola personalizada a cada gestor por correo y registra el histórico. Accesible desde cualquier dispositivo, sin licencias, sin servidor propio.</p>
+            <div class="mvp-tags"><span class="mvp-tag">Google Sheets</span><span class="mvp-tag">Apps Script</span><span class="mvp-tag">Mes 2</span><span class="mvp-tag">Gratuito</span><span class="mvp-tag">En la nube</span></div>
+          </div>
+        </div>
+
+        <div class="mvp-phase">
+          <div class="mvp-num" style="background:var(--teal-light);">4</div>
+          <div class="mvp-content">
+            <h4>Dashboard en Google Looker Studio</h4>
+            <p>Looker Studio (antes Data Studio) conecta directamente con el Google Sheet anterior y genera un dashboard visual en tiempo real accesible desde el navegador. Los supervisores ven KPIs actualizados: carga por código de gestor, alertas de saturación y tramos críticos. Totalmente gratuito, sin servidor propio.</p>
+            <div class="mvp-tags"><span class="mvp-tag">Looker Studio</span><span class="mvp-tag">Mes 2-3</span><span class="mvp-tag">Gratuito</span><span class="mvp-tag">Tiempo real</span><span class="mvp-tag">Sin instalación</span></div>
+          </div>
+        </div>
+
+        <div class="mvp-phase">
+          <div class="mvp-num" style="background:#3498db;">5</div>
+          <div class="mvp-content">
+            <h4>Ajuste de pesos por rendimiento histórico</h4>
+            <p>Con el histórico acumulado en el Sheet, el supervisor revisa mensualmente qué variables del IPP han predicho mejor la recuperación real. Usa el ajustador de pesos integrado en este dashboard para recalibrar sin código. El feedback loop: IPP asignado vs. resultado real, en una hoja de comparación automática.</p>
+            <div class="mvp-tags"><span class="mvp-tag">Sin código</span><span class="mvp-tag">Mes 4+</span><span class="mvp-tag">Feedback loop</span><span class="mvp-tag">Ajuste mensual</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <h3>🏆 Alineación con Criterios de Evaluación</h3>
+        <div class="progress-wrap" style="margin-top:8px;"><div class="progress-label"><span>🔧 Flujo operativo Lean (30%)</span><span style="color:#27ae60;">✓ Cubierto</span></div><div class="progress-track"><div class="progress-fill" style="--fill-color:#27ae60;width:90%"></div></div><div style="font-size:11px;color:var(--gray);margin-top:3px;">Elimina 5 desperdicios Lean identificados en el flujo manual</div></div>
+        <div class="progress-wrap"><div class="progress-label"><span>⚙️ Modelo de decisión (30%)</span><span style="color:#27ae60;">✓ Cubierto</span></div><div class="progress-track"><div class="progress-fill" style="--fill-color:#e8b84b;width:90%"></div></div><div style="font-size:11px;color:var(--gray);margin-top:3px;">Algoritmo IPP ponderado, escalable y explicable</div></div>
+        <div class="progress-wrap"><div class="progress-label"><span>💡 Innovación (20%)</span><span style="color:#27ae60;">✓ Cubierto</span></div><div class="progress-track"><div class="progress-fill" style="--fill-color:#3498db;width:85%"></div></div><div style="font-size:11px;color:var(--gray);margin-top:3px;">Motor de reglas + scoring automático + reactivación inteligente</div></div>
+        <div class="progress-wrap"><div class="progress-label"><span>📈 Control y aprendizaje (20%)</span><span style="color:#27ae60;">✓ Cubierto</span></div><div class="progress-track"><div class="progress-fill" style="--fill-color:#9b59b6;width:88%"></div></div><div style="font-size:11px;color:var(--gray);margin-top:3px;">Looker Studio en tiempo real + KPIs + feedback loop diario</div></div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <h3>🎯 KPIs de Seguimiento del Modelo</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;"><span style="color:var(--gray);">% Exp. gestionados antes de 60 días</span><span style="color:var(--gold);font-weight:700;">Objetivo: ≥ 75%</span></div>
+          <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;"><span style="color:var(--gray);">Productividad media gestor</span><span style="color:var(--gold);font-weight:700;">Objetivo: ≥ 280 exp/día</span></div>
+          <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;"><span style="color:var(--gray);">Tasa de reactivaciones</span><span style="color:var(--gold);font-weight:700;">Objetivo: ≤ 15%</span></div>
+          <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;"><span style="color:var(--gray);">Exp. críticos (61-90d) sin cubrir</span><span style="color:var(--gold);font-weight:700;">Objetivo: 0% sin gestión</span></div>
+          <div style="display:flex;justify-content:space-between;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;"><span style="color:var(--gray);">Tiempo de decisión diaria (supervisor)</span><span style="color:var(--gold);font-weight:700;">Reducción: -80%</span></div>
+        </div>
+      </div>
+
+      <!-- CAJA AUTORÍA -->
+      <div style="background:linear-gradient(135deg,var(--teal),var(--teal-light));border-radius:14px;padding:24px;text-align:center;">
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;">"No repartimos expedientes.</div>
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--gold);">Diseñamos decisiones."</div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.2);">
+          <div style="font-size:15px;font-weight:700;color:var(--white);">Alberto Hijano y Carlos López</div>
+          <div style="font-size:12px;margin-top:5px;opacity:.9;">Facultad de Ciencias Económicas y Empresariales</div>
+          <div style="font-size:12px;opacity:.9;">Universidad de Málaga · 2026</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>⚠️ Riesgos, Supuestos y Mitigaciones</h3>
+    <div style="overflow-x:auto;">
+      <table class="tbl">
+        <thead><tr><th>Riesgo</th><th>Probabilidad</th><th>Impacto</th><th>Mitigación</th></tr></thead>
+        <tbody>
+          <tr><td>Datos de entrada incompletos o erróneos desde TRANSMI</td><td><span class="badge naranja">Media</span></td><td><span class="badge rojo">Alto</span></td><td>Validación automática al importar. Expedientes incompletos van a bandeja de revisión.</td></tr>
+          <tr><td>Resistencia al cambio por parte de gestores</td><td><span class="badge rojo">Alta</span></td><td><span class="badge naranja">Medio</span></td><td>Fase 1 mantiene visibilidad total. El gestor puede ver el porqué de cada prioridad.</td></tr>
+          <tr><td>Pesos del IPP no calibrados correctamente al inicio</td><td><span class="badge naranja">Media</span></td><td><span class="badge naranja">Medio</span></td><td>Revisión semanal de pesos en las primeras 4 semanas. Feedback loop inmediato.</td></tr>
+          <tr><td>Saturación por reactivaciones que colapsen la cola</td><td><span class="badge verde">Baja</span></td><td><span class="badge naranja">Medio</span></td><td>Cap máximo de 15% en reactivaciones. Alerta automática si se supera.</td></tr>
+          <tr><td>Cambios normativos que alteren el umbral de 90 días</td><td><span class="badge verde">Baja</span></td><td><span class="badge rojo">Alto</span></td><td>Umbral parametrizable. Un cambio en el simulador propaga a toda la lógica.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:14px;padding:12px;background:rgba(232,184,75,0.08);border-radius:8px;font-size:12px;color:var(--gray);"><strong style="color:var(--gold);">Supuestos del modelo:</strong> distribución de tramos simulada. Importe medio estimado en €2.500/expediente. Capacidad de 300 exp/gestor/día como media global. Tasa de recuperación del 20% base.</div>
+  </div>
+</div>
+
+<script>
+// ─── CLOCK ───
+function updateClock(){
+  const n=new Date();
+  document.getElementById('clock').textContent=n.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('d-fecha').textContent=n.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
+}
+updateClock();setInterval(updateClock,1000);
+
+// ─── TABS ───
+function showPanel(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('p-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(id==='expedientes')generateExpedientes();
+}
+
+// ─── STATE ───
+let params={exp:12000,gest:39,cap:300,tasa:20,imp:2500,react:10,t1:40,t2:35,t3:25};
+let W={urg:30,imp:25,rec:20,esf:15,his:10};
+const GCODES=['GT-001','GT-002','GT-003','GT-004','GT-005','GT-006','GT-007','GT-008','GT-009','GT-010','GT-011','GT-012'];
+
+// ─── VAR MODAL DATA ───
+const VDATA={
+  urgencia:{icon:'⏱️',title:'Cercanía al Umbral (días restantes)',wkey:'urg',
+    what:'Mide cuántos días le quedan al expediente antes de alcanzar el umbral crítico de 90 días. La pérdida de valor de la deuda es exponencial conforme se acerca la mora: a partir del día 75, la probabilidad de recuperación cae muy rápidamente.',
+    why:'Es la variable con mayor peso (30%) porque el factor tiempo es el más determinante en recobros pre-mora. Un expediente en día 88 tiene urgencia máxima independientemente de su importe. Sin priorización temporal, los gestores tienden a coger los casos más cómodos, dejando los críticos para tarde.',
+    formula:'Urgencia = (días_transcurridos / 90) × multiplicador_tramo\nTramo 1-30d → ×0.30 | Tramo 31-60d → ×0.65 | Tramo 61-90d → ×1.00\nEscala resultado: 0.0 a 1.0',
+    examples:[{l:'Día 15 · Tramo 1',v:'Score urgencia ≈ 0.05 → Baja'},{l:'Día 78 · Tramo 3',v:'Score urgencia ≈ 0.87 → Crítica'}],
+    impact:'Un expediente en día 85 puede subir hasta 30 puntos IPP solo por esta variable, pasando directamente a P1 aunque su importe sea reducido.'
+  },
+  importe:{icon:'💰',title:'Importe de la Deuda',wkey:'imp',
+    what:'Refleja el valor económico del expediente: cuánto dinero recuperaría la entidad si se resuelve favorablemente. Se normaliza sobre el importe máximo de la cartera para que la escala sea relativa y no dependa de valores absolutos.',
+    why:'Peso del 25% porque el impacto económico es el segundo criterio más importante. No tiene sentido invertir el mismo esfuerzo en un expediente de €500 que en uno de €9.000. El modelo redirige capacidad hacia donde el retorno potencial es mayor.',
+    formula:'Importe_norm = importe_expediente / importe_máximo_cartera\nEjemplo: €6.000 sobre máx €10.000 → 0.60\nContribución al IPP = Importe_norm × peso (0.25)',
+    examples:[{l:'Importe €1.200',v:'Contribuye +3 pts al IPP'},{l:'Importe €8.500',v:'Contribuye +21 pts al IPP'}],
+    impact:'Un expediente de €8.000 gana hasta 21 puntos IPP por importe. Combinado con urgencia alta, prácticamente garantiza P1.'
+  },
+  recuperacion:{icon:'🎯',title:'Probabilidad de Recuperación',wkey:'rec',
+    what:'Estima la probabilidad de que el cliente resuelva la deuda si se le contacta. Se construye a partir del historial de pagos previos, tipo de producto, antigüedad como cliente y si ha respondido a contactos anteriores.',
+    why:'Peso del 20% porque la priorización debe ser eficiente: no solo urgente o económicamente grande, sino también realizable. Invertir tiempo en casos con 5% de probabilidad a expensas de casos con 60% es un desperdicio Lean claro.',
+    formula:'P_recuperación = probabilidad estimada (0.0 a 1.0)\nFuente: historial de pagos + tipo de producto + respuesta previa\nContribución al IPP = P_rec × peso (0.20)',
+    examples:[{l:'Sin historial de impago',v:'P_rec ≈ 0.55 → Alta recuperabilidad'},{l:'3er impago consecutivo',v:'P_rec ≈ 0.12 → Baja recuperabilidad'}],
+    impact:'Un caso con P_rec=0.70 aporta 14 puntos. Uno con P_rec=0.10 solo aporta 2. Evita que gestores "malgasten" turnos en casos prácticamente perdidos.'
+  },
+  esfuerzo:{icon:'🔧',title:'Esfuerzo Estimado',wkey:'esf',
+    what:'Mide la complejidad operativa del expediente: cuánto tiempo requerirá al gestor. Bajo = contacto directo y respuesta rápida. Medio = requiere seguimiento o negociación. Alto = proceso complejo, múltiples intentos, posible acuerdo fraccionado.',
+    why:'Peso del 15% en sentido INVERSO: esfuerzo bajo sube el score porque permite gestionar rápido (quick win) y liberar capacidad. Principio Lean: completar casos rápidos primero aumenta el throughput total sin sacrificar los críticos.',
+    formula:'Contribución = (1 – esfuerzo_norm) × peso (0.15)\nBajo=0 → contribuye +15 | Medio=0.5 → +7.5 | Alto=1 → +0\n(No penaliza, solo no bonifica)',
+    examples:[{l:'Caso Bajo esfuerzo',v:'Suma +15 puntos al IPP'},{l:'Caso Alto esfuerzo',v:'Suma +0 puntos (neutro)'}],
+    impact:'Genera efecto "quick wins": casos fáciles se procesan antes, aumentando la productividad total sin sacrificar los P1 (que tienen alta urgencia).'
+  },
+  historial:{icon:'📜',title:'Historial de Gestión',wkey:'his',
+    what:'Indica si el expediente ha recibido algún intento de contacto previo. Un expediente sin ningún intento tiene mayor probabilidad de respuesta positiva al primer contacto que uno intentado varias veces sin éxito.',
+    why:'Peso del 10%. La primera llamada tiene la mayor tasa de éxito estadística en recobros pre-mora. También incentiva que los gestores registren correctamente cada intento en NEXA, mejorando la trazabilidad.',
+    formula:'Novedad_gestión: Sin contacto=1.0 | 1 intento=0.5 | 2+ intentos=0.1\nContribución al IPP = novedad × peso (0.10)\nMáximo: +10 puntos al IPP',
+    examples:[{l:'Sin contacto previo',v:'+10 puntos al IPP'},{l:'2 intentos previos',v:'+1 punto al IPP'}],
+    impact:'Si un gestor no registra un intento, el expediente vuelve a puntuar como "sin contacto" al día siguiente, incentivando el registro correcto.'
+  }
+};
+
+function openVarModal(key){
+  const d=VDATA[key];
+  document.getElementById('m-icon').textContent=d.icon;
+  document.getElementById('m-title').textContent=d.title;
+  document.getElementById('m-pct').textContent=W[d.wkey]+'%';
+  document.getElementById('m-what').textContent=d.what;
+  document.getElementById('m-why').textContent=d.why;
+  document.getElementById('m-formula').textContent=d.formula;
+  let exH='';d.examples.forEach(e=>{exH+=`<div class="mex"><div class="el">${e.l}</div><div class="ev">${e.v}</div></div>`;});
+  document.getElementById('m-examples').innerHTML=exH;
+  document.getElementById('m-impact').textContent=d.impact;
+  document.getElementById('varModal').classList.add('open');
+}
+
+// ─── PESOS MODAL ───
+function weightsUpdate(){
+  const u=+document.getElementById('w-urg').value;
+  const im=+document.getElementById('w-imp').value;
+  const r=+document.getElementById('w-rec').value;
+  const e=+document.getElementById('w-esf').value;
+  const h=+document.getElementById('w-his').value;
+  const s=u+im+r+e+h;
+  document.getElementById('wv-urg').textContent=u+'%';
+  document.getElementById('wv-imp').textContent=im+'%';
+  document.getElementById('wv-rec').textContent=r+'%';
+  document.getElementById('wv-esf').textContent=e+'%';
+  document.getElementById('wv-his').textContent=h+'%';
+  const bar=document.getElementById('wsum-bar');
+  bar.textContent='Suma: '+s+'% '+(s===100?'✓':'← ajusta hasta sumar 100%');
+  bar.style.background=s===100?'rgba(39,174,96,0.15)':'rgba(192,57,43,0.15)';
+  bar.style.color=s===100?'#27ae60':'#c0392b';
+}
+
+function applyPreset(p){
+  const P={balanced:{u:30,im:25,r:20,e:15,h:10},urgency:{u:50,im:20,r:15,e:10,h:5},economic:{u:20,im:45,r:20,e:10,h:5},recovery:{u:20,im:20,r:40,e:15,h:5}};
+  const pr=P[p];
+  document.getElementById('w-urg').value=pr.u;document.getElementById('w-imp').value=pr.im;
+  document.getElementById('w-rec').value=pr.r;document.getElementById('w-esf').value=pr.e;document.getElementById('w-his').value=pr.h;
+  weightsUpdate();
+}
+
+function applyWeights(){
+  const u=+document.getElementById('w-urg').value,im=+document.getElementById('w-imp').value,r=+document.getElementById('w-rec').value,e=+document.getElementById('w-esf').value,h=+document.getElementById('w-his').value;
+  if(u+im+r+e+h!==100){alert('Los pesos deben sumar 100%. Suma actual: '+(u+im+r+e+h)+'%');return;}
+  W={urg:u,imp:im,rec:r,esf:e,his:h};
+  document.getElementById('disp-urg').textContent=u+'%';document.getElementById('disp-imp').textContent=im+'%';
+  document.getElementById('disp-rec').textContent=r+'%';document.getElementById('disp-esf').textContent=e+'%';document.getElementById('disp-his').textContent=h+'%';
+  document.getElementById('fw-u').textContent=(u/100).toFixed(2);document.getElementById('fw-i').textContent=(im/100).toFixed(2);
+  document.getElementById('fw-r').textContent=(r/100).toFixed(2);document.getElementById('fw-e').textContent=(e/100).toFixed(2);document.getElementById('fw-h').textContent=(h/100).toFixed(2);
+  document.getElementById('autoModal').classList.remove('open');
+  generateExpedientes();
+}
+
+// ─── TRAMO ───
+function tramoUpdate(ch){
+  let t1=+document.getElementById('s-t1').value,t2=+document.getElementById('s-t2').value,t3=+document.getElementById('s-t3').value;
+  if(ch===1){let rem=100-t1;t2=Math.round(rem*t2/(t2+t3||1));t3=100-t1-t2;}
+  if(ch===2){let rem=100-t2;t1=Math.round(rem*t1/(t1+t3||1));t3=100-t1-t2;}
+  if(ch===3){let rem=100-t3;t1=Math.round(rem*t1/(t1+t2||1));t2=100-t1-t3;}
+  t1=Math.max(0,t1);t2=Math.max(0,t2);t3=Math.max(0,t3);
+  let tot=t1+t2+t3;if(tot!==100)t1+=100-tot;
+  document.getElementById('s-t1').value=t1;document.getElementById('s-t2').value=t2;document.getElementById('s-t3').value=t3;
+  document.getElementById('st1v').textContent=t1+'%';document.getElementById('st2v').textContent=t2+'%';document.getElementById('st3v').textContent=t3+'%';
+  params.t1=t1;params.t2=t2;params.t3=t3;
+  const info=document.getElementById('tramo-sum-info');
+  info.textContent='Total: '+(t1+t2+t3)+'%';
+  info.style.background=(t1+t2+t3===100)?'rgba(39,174,96,0.12)':'rgba(192,57,43,0.12)';
+  info.style.color=(t1+t2+t3===100)?'#27ae60':'#c0392b';
+  simUpdate();updateDashboard();
+}
+
+// ─── SIM ───
+function simUpdate(){
+  params.exp=+document.getElementById('s-exp').value;params.gest=+document.getElementById('s-gest').value;
+  params.cap=+document.getElementById('s-cap').value;params.tasa=+document.getElementById('s-tasa').value;
+  params.imp=+document.getElementById('s-imp').value;params.react=+document.getElementById('s-react').value;
+  document.getElementById('sv-exp').textContent=params.exp.toLocaleString('es-ES');
+  document.getElementById('sv-gest').textContent=params.gest;document.getElementById('sv-cap').textContent=params.cap;
+  document.getElementById('sv-tasa').textContent=params.tasa+'%';document.getElementById('sv-imp').textContent=params.imp.toLocaleString('es-ES')+'€';
+  document.getElementById('sv-react').textContent=params.react+'%';
+  const cap=params.gest*params.cap,gap=Math.max(0,params.exp-cap),uso=Math.round(params.exp/cap*100);
+  const valC=Math.min(params.exp,cap)*params.imp*(params.tasa/100),valR=gap*params.imp*(params.tasa/100);
+  document.getElementById('r-cap').textContent=cap.toLocaleString('es-ES');
+  const uEl=document.getElementById('r-uso');uEl.textContent=uso+'%';uEl.style.color=uso>100?'#c0392b':uso>90?'#e8b84b':'#27ae60';
+  document.getElementById('r-gap').textContent=gap>0?gap.toLocaleString('es-ES'):'✓ 0';
+  document.getElementById('r-val').textContent='€'+Math.round(valC/1000)+'k/día';
+  let diag,bg;
+  if(uso<=90){diag='<strong style="color:#27ae60">✅ Operación en equilibrio.</strong> Capacidad con margen. El modelo puede priorizar calidad sobre volumen.';bg='rgba(39,174,96,0.08)';}
+  else if(uso<=100){diag='<strong style="color:#e8b84b">⚠️ Operación al límite.</strong> Capacidad cubre la entrada sin margen para reactivaciones. La priorización es crítica.';bg='rgba(232,184,75,0.08)';}
+  else{diag='<strong style="color:#c0392b">🚨 Sobrecarga detectada.</strong> '+gap.toLocaleString('es-ES')+' exp. sin gestión. Valor en riesgo: €'+Math.round(valR/1000)+'k.';bg='rgba(192,57,43,0.08)';}
+  const dd=document.getElementById('r-diagnostico');dd.innerHTML=diag;dd.style.cssText='background:'+bg+';border-radius:8px;padding:12px;font-size:13px;line-height:1.6;';
+  const t1e=Math.round(params.exp*params.t1/100),t2e=Math.round(params.exp*params.t2/100),t3e=params.exp-t1e-t2e;
+  const g3=Math.round(params.gest*0.35),g2=Math.round(params.gest*0.35),g1=params.gest-g2-g3;
+  document.getElementById('asignacion-tramos').innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:rgba(39,174,96,0.08);border-radius:8px;border-left:3px solid #27ae60;"><div><strong style="color:#27ae60">🟢 Tramo 1-30d</strong><div style="font-size:11px;color:var(--gray)">${t1e.toLocaleString('es-ES')} exp. → ${g1} gestores → cap. ${(g1*params.cap).toLocaleString('es-ES')}</div></div><span style="font-size:11px;color:${t1e<=g1*params.cap?'#27ae60':'#c0392b'};font-weight:600;">${t1e<=g1*params.cap?'✓ OK':'⚠ Sobrecarga'}</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:rgba(230,126,34,0.08);border-radius:8px;border-left:3px solid #e67e22;"><div><strong style="color:#e67e22">🟠 Tramo 31-60d</strong><div style="font-size:11px;color:var(--gray)">${t2e.toLocaleString('es-ES')} exp. → ${g2} gestores → cap. ${(g2*params.cap).toLocaleString('es-ES')}</div></div><span style="font-size:11px;color:${t2e<=g2*params.cap?'#27ae60':'#c0392b'};font-weight:600;">${t2e<=g2*params.cap?'✓ OK':'⚠ Sobrecarga'}</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:rgba(192,57,43,0.08);border-radius:8px;border-left:3px solid #c0392b;"><div><strong style="color:#c0392b">🔴 Tramo 61-90d</strong><div style="font-size:11px;color:var(--gray)">${t3e.toLocaleString('es-ES')} exp. → ${g3} gestores → cap. ${(g3*params.cap).toLocaleString('es-ES')}</div></div><span style="font-size:11px;color:${t3e<=g3*params.cap?'#27ae60':'#c0392b'};font-weight:600;">${t3e<=g3*params.cap?'✓ OK':'⚠ Sobrecarga'}</span></div>
+  </div>`;
+  let gh='';
+  const gn=['Tramo 1-30d','Tramo 31-60d','Tramo 61-90d'],gc=[g1,g2,g3],gl=[Math.round(t1e/Math.max(g1,1)),Math.round(t2e/Math.max(g2,1)),Math.round(t3e/Math.max(g3,1))],gco=['#27ae60','#e67e22','#c0392b'];
+  for(let i=0;i<3;i++){const p=Math.min(100,Math.round(gl[i]/params.cap*100));const c=p>100?'#c0392b':p>90?'#e8b84b':gco[i];gh+=`<div class="gestor-row"><div class="gestor-name" style="font-size:11px;">${gn[i]}<br><span style="color:var(--gray)">${gc[i]} gest.</span></div><div class="gestor-bar-wrap"><div class="gestor-bar" style="background:${c};width:${Math.min(100,p)}%"><span>${gl[i]}</span></div></div><div class="gestor-cap">${p}%</div></div>`;}
+  document.getElementById('s-gestor-bars').innerHTML=gh;
+  updateDashboard();
+}
+
+// ─── DASHBOARD ───
+function updateDashboard(){
+  const cap=params.gest*params.cap,gap=Math.max(0,params.exp-cap),uso=Math.round(params.exp/cap*100),t3e=Math.round(params.exp*params.t3/100);
+  document.getElementById('kpi-entrada').textContent=params.exp.toLocaleString('es-ES');
+  document.getElementById('kpi-cap').textContent=cap.toLocaleString('es-ES');
+  document.getElementById('kpi-cap-sub').textContent=`${params.gest} gest. × ${params.cap}`;
+  document.getElementById('kpi-cap-trend').textContent=uso+'% uso';
+  document.getElementById('kpi-cap-trend').className='kpi-trend '+(uso>100?'down':uso>90?'warn':'up');
+  document.getElementById('kpi-criticos').textContent=t3e.toLocaleString('es-ES');
+  document.getElementById('kpi-crit-sub').textContent=params.t3+'% del total';
+  document.getElementById('kpi-tasa').textContent=params.tasa+'%';
+  document.getElementById('kpi-tasa-sub').textContent='≈ €'+Math.round(Math.min(params.exp,cap)*params.imp*params.tasa/100/1000)+'k/día recuperables';
+  document.getElementById('kpi-riesgo').textContent=gap>0?'€'+Math.round(gap*params.imp*(params.tasa/100)/1000)+'k':'€0 ✓';
+  document.getElementById('t1-pct').textContent=params.t1+'%';document.getElementById('t2-pct').textContent=params.t2+'%';document.getElementById('t3-pct').textContent=params.t3+'%';
+  document.getElementById('t1-bar').style.width=params.t1+'%';document.getElementById('t2-bar').style.width=params.t2+'%';document.getElementById('t3-bar').style.width=params.t3+'%';
+  document.getElementById('t1-cnt').textContent=Math.round(params.exp*params.t1/100).toLocaleString('es-ES')+' expedientes';
+  document.getElementById('t2-cnt').textContent=Math.round(params.exp*params.t2/100).toLocaleString('es-ES')+' expedientes';
+  document.getElementById('t3-cnt').textContent=Math.round(params.exp*params.t3/100).toLocaleString('es-ES')+' expedientes';
+  const p60=Math.round((params.t1+params.t2));
+  document.getElementById('kpi-60').textContent=p60+'%';document.getElementById('bar-60').style.width=p60+'%';
+  document.getElementById('kpi-prod').textContent=params.cap+' exp/día';document.getElementById('bar-prod').style.width=Math.min(100,Math.round(params.cap/500*100))+'%';
+  document.getElementById('kpi-react').textContent=params.react+'%';document.getElementById('bar-react').style.width=params.react+'%';
+  const cob=Math.min(100,Math.round(Math.round(params.gest*0.35)*params.cap/Math.max(t3e,1)*100));
+  document.getElementById('kpi-crit2').textContent=cob+'%';document.getElementById('bar-crit').style.width=cob+'%';
+  let al='';
+  if(uso>100)al+=`<div class="alert red"><div class="alert-icon">🚨</div><div class="alert-text"><strong>Sobrecarga operativa</strong><span>${gap.toLocaleString('es-ES')} expedientes sobre la capacidad. Activa protocolo de redistribución.</span></div></div>`;
+  if(params.t3>30)al+=`<div class="alert red"><div class="alert-icon">⏰</div><div class="alert-text"><strong>Tramo crítico elevado (${params.t3}%)</strong><span>Más de un tercio cerca del umbral de mora. Priorizar P1.</span></div></div>`;
+  if(params.react>15)al+=`<div class="alert orange"><div class="alert-icon">🔁</div><div class="alert-text"><strong>Reactivaciones altas (${params.react}%)</strong><span>Supera el umbral del 15%. Revisar calidad de la gestión inicial.</span></div></div>`;
+  if(uso<=90&&params.t3<=25&&params.react<=15)al+=`<div class="alert green"><div class="alert-icon">✅</div><div class="alert-text"><strong>Operación en parámetros normales</strong><span>Todos los indicadores dentro del rango objetivo.</span></div></div>`;
+  if(uso>90&&uso<=100)al+=`<div class="alert orange"><div class="alert-icon">⚠️</div><div class="alert-text"><strong>Capacidad al límite (${uso}%)</strong><span>Sin margen para incidencias. La priorización IPP es crítica hoy.</span></div></div>`;
+  document.getElementById('alertas-container').innerHTML=al||'<div style="color:var(--gray);font-size:13px;">Sin alertas activas</div>';
+  let gh='';
+  for(let i=0;i<8;i++){const ld=Math.round(params.cap*(0.82+Math.random()*0.32));const p=Math.min(110,Math.round(ld/params.cap*100));const c=p>100?'#c0392b':p>90?'#e8b84b':'#27ae60';gh+=`<div class="gestor-row"><div class="gestor-name">${GCODES[i]}</div><div class="gestor-bar-wrap"><div class="gestor-bar" style="background:${c};width:${Math.min(100,p)}%"><span>${ld}</span></div></div><div class="gestor-cap">${p}%</div></div>`;}
+  document.getElementById('gestor-bars-dash').innerHTML=gh;
+  let bars='',labels='';
+  const days=['L','M','X','J','V','S','D'],mxV=cap*1.05;
+  for(let i=0;i<7;i++){const v=Math.round(cap*(0.82+Math.random()*0.22));const h=Math.round(v/mxV*55);const c=v>cap?'#c0392b':v>cap*0.9?'#e8b84b':'#27ae60';bars+=`<div class="mini-bar" style="height:${h}px;background:${c}" title="${v.toLocaleString('es-ES')} gestionados"></div>`;labels+=`<span>${days[i]}</span>`;}
+  document.getElementById('mini-bars').innerHTML=bars;document.getElementById('mini-labels').innerHTML=labels;
+}
+
+// ─── EXPEDIENTES ───
+function generateExpedientes(){
+  const T=[{l:'1-30d',cl:'verde',d:[1,30],um:0.3},{l:'31-60d',cl:'naranja',d:[31,60],um:0.65},{l:'61-90d',cl:'rojo',d:[61,90],um:1.0}];
+  const ESF=['Bajo','Medio','Alto'],HIST=['Sin contacto','1 intento','2 intentos'];
+  let rows=[];
+  for(let i=0;i<20;i++){
+    const r=Math.random()*100;let tr=r<params.t3?T[2]:r<params.t3+params.t2?T[1]:T[0];
+    const dias=tr.d[0]+Math.floor(Math.random()*(tr.d[1]-tr.d[0]));
+    const imp=Math.round((500+Math.random()*9500)/100)*100;
+    const pRec=Math.round(5+Math.random()*55);
+    const esf=ESF[Math.floor(Math.random()*3)];
+    const hist=HIST[Math.floor(Math.random()*3)];
+    const uN=(dias/90)*tr.um,iN=imp/10000,rN=pRec/100,eN=esf==='Bajo'?0:esf==='Medio'?0.5:1,hN=hist==='Sin contacto'?1:hist==='1 intento'?0.5:0.1;
+    const ipp=Math.min(100,Math.round((W.urg/100)*uN*100+(W.imp/100)*iN*100+(W.rec/100)*rN*100+(W.esf/100)*(1-eN)*100+(W.his/100)*hN*100));
+    let pr,pc;if(ipp>=75){pr='P1 Crítico';pc='rojo';}else if(ipp>=50){pr='P2 Alto';pc='naranja';}else if(ipp>=25){pr='P3 Medio';pc='azul';}else{pr='P4 Bajo';pc='verde';}
+    const g=GCODES[Math.floor(Math.random()*GCODES.length)];
+    rows.push({id:'EXP-'+String(100000+i*37+Math.floor(Math.random()*99)).slice(0,6),dias,tr,imp,pRec,esf,hist,ipp,pr,pc,g});
+  }
+  rows.sort((a,b)=>b.ipp-a.ipp);
+  let html='';
+  rows.forEach((row,i)=>{
+    const sw=Math.round(Math.min(row.ipp,100)*0.78);
+    html+=`<tr><td style="color:var(--gray);font-size:12px;">${i+1}</td><td style="font-family:'Syne',sans-serif;font-size:12px;font-weight:600;">${row.id}</td><td>${row.dias}d</td><td><span class="badge ${row.tr.cl}">${row.tr.l}</span></td><td style="font-weight:600;">€${row.imp.toLocaleString('es-ES')}</td><td>${row.pRec}%</td><td><span class="badge ${row.esf==='Bajo'?'verde':row.esf==='Medio'?'naranja':'rojo'}">${row.esf}</span></td><td style="font-size:12px;color:var(--gray);">${row.hist}</td><td><div class="score-bar"><div class="score-fill" style="width:${sw}px;"></div><span class="score-num">${row.ipp}</span></div></td><td><span class="badge ${row.pc}">${row.pr}</span></td><td style="font-size:12px;font-family:'Syne',sans-serif;font-weight:600;color:#2a7d7a;">${row.g}</td></tr>`;
+  });
+  document.getElementById('exp-tbody').innerHTML=html;
+}
+
+// ─── INIT ───
+simUpdate();generateExpedientes();tramoUpdate(0);weightsUpdate();
+</script>
+</body>
+</html>
